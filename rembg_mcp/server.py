@@ -13,6 +13,7 @@ from mcp.server import NotificationOptions, Server
 from mcp.server.models import InitializationOptions
 from PIL import Image
 from rembg import new_session, remove
+from rembg.sessions import sessions_names
 
 
 class RembgMCPServer:
@@ -21,7 +22,81 @@ class RembgMCPServer:
     def __init__(self) -> None:
         self.server = Server("rembg-mcp")
         self._sessions: Dict[str, Any] = {}
+        self._model_descriptions = self._get_model_descriptions()
         self._setup_handlers()
+
+    def _get_model_descriptions(self) -> Dict[str, str]:
+        """Get descriptions for each model based on their use cases."""
+        return {
+            "u2net": "General purpose model with good balance of speed and accuracy. Best for most common use cases.",
+            "u2netp": "Lightweight version of U2Net with faster inference but slightly lower accuracy.",
+            "u2net_human_seg": "Optimized for human portrait segmentation. Best for photos of people.",
+            "u2net_cloth_seg": "Specialized for clothing and fashion items segmentation.",
+            "silueta": "Very lightweight model for quick processing when speed is priority over accuracy.",
+            "isnet-general-use": "ISNet model for general use cases with good edge preservation.",
+            "isnet-anime": "Specialized for anime and cartoon-style images with clean line art.",
+            "birefnet-general": "High accuracy BiRefNet model for general use cases. Slower but very precise.",
+            "birefnet-general-lite": "Lighter version of BiRefNet-general with faster processing.",
+            "birefnet-portrait": "Optimized for portrait photography with excellent hair and edge detail.",
+            "birefnet-dis": "BiRefNet model trained on Distinguishable Image Segmentation dataset.",
+            "birefnet-hrsod": "High-resolution salient object detection model for detailed segmentation.",
+            "birefnet-cod": "Camouflaged object detection model for complex backgrounds.",
+            "birefnet-massive": "Largest BiRefNet model with highest accuracy but slowest processing.",
+            "sam": "Segment Anything Model supporting interactive prompts (points, boxes). Most versatile.",
+            "dis-anime": "DIS model specialized for anime and cartoon images.",
+            "dis-custom": "Custom DIS model variant.",
+            "dis-general-use": "DIS model for general purpose background removal.",
+            "bria-rmbg": "BRIA background removal model with commercial-friendly license.",
+            "ben-custom": "Custom Ben model variant."
+        }
+
+    def _get_available_models(self) -> List[str]:
+        """Get list of models that are actually available (downloaded) on the system."""
+        from rembg.sessions.base import BaseSession
+
+        u2net_home = BaseSession.u2net_home()
+        available_models = []
+
+        # Map model names to their actual ONNX filenames
+        filename_map = {
+            "u2net": "u2net.onnx",
+            "u2netp": "u2netp.onnx",
+            "u2net_human_seg": "u2net_human_seg.onnx",
+            "u2net_cloth_seg": "u2net_cloth_seg.onnx",
+            "silueta": "silueta.onnx",
+            "isnet-general-use": "isnet-general-use.onnx",
+            "isnet-anime": "isnet-anime.onnx",
+            "birefnet-general": "birefnet-general.onnx",
+            "birefnet-general-lite": "birefnet-general-lite.onnx",
+            "birefnet-portrait": "birefnet-portrait.onnx",
+            "birefnet-dis": "birefnet-dis.onnx",
+            "birefnet-hrsod": "birefnet-hrsod.onnx",
+            "birefnet-cod": "birefnet-cod.onnx",
+            "birefnet-massive": "birefnet-massive.onnx",
+            "dis-anime": "dis-anime.onnx",
+            "dis-custom": "dis-custom.onnx",
+            "dis-general-use": "dis-general-use.onnx",
+            "bria-rmbg": "bria-rmbg.onnx",
+            "ben-custom": "ben-custom.onnx"
+        }
+
+        for model_name in sessions_names:
+            model_files_exist = False
+
+            if model_name == "sam":
+                encoder_path = os.path.join(u2net_home, "sam_vit_b_01ec64.encoder.onnx")
+                decoder_path = os.path.join(u2net_home, "sam_vit_b_01ec64.decoder.onnx")
+                model_files_exist = os.path.exists(encoder_path) and os.path.exists(decoder_path)
+            else:
+                # Use the mapped filename if available, otherwise fall back to default pattern
+                filename = filename_map.get(model_name, f"{model_name}.onnx")
+                model_path = os.path.join(u2net_home, filename)
+                model_files_exist = os.path.exists(model_path)
+
+            if model_files_exist:
+                available_models.append(model_name)
+
+        return available_models if available_models else sessions_names
 
     def _setup_handlers(self) -> None:
         """Set up MCP handlers."""
@@ -29,6 +104,13 @@ class RembgMCPServer:
         @self.server.list_tools()
         async def handle_list_tools() -> List[types.Tool]:
             """List available tools."""
+            available_models = self._get_available_models()
+            model_enum_with_descriptions = []
+
+            for model in available_models:
+                description = self._model_descriptions.get(model, f"Model: {model}")
+                model_enum_with_descriptions.append({"const": model, "description": description})
+
             return [
                 types.Tool(
                     name="rembg-i",
@@ -46,15 +128,9 @@ class RembgMCPServer:
                             },
                             "model": {
                                 "type": "string",
-                                "description": "Model to use for background removal",
+                                "description": "Model to use for background removal. Each model is optimized for different use cases.",
                                 "default": "u2net",
-                                "enum": [
-                                    "u2net", "u2netp", "u2net_human_seg", "u2net_cloth_seg",
-                                    "silueta", "isnet-general-use", "isnet-anime",
-                                    "birefnet-general", "birefnet-general-lite",
-                                    "birefnet-portrait", "birefnet-dis", "birefnet-hrsod",
-                                    "birefnet-cod", "birefnet-massive", "sam"
-                                ]
+                                "oneOf": model_enum_with_descriptions
                             },
                             "alpha_matting": {
                                 "type": "boolean",
@@ -86,15 +162,9 @@ class RembgMCPServer:
                             },
                             "model": {
                                 "type": "string",
-                                "description": "Model to use for background removal",
+                                "description": "Model to use for background removal. Each model is optimized for different use cases.",
                                 "default": "u2net",
-                                "enum": [
-                                    "u2net", "u2netp", "u2net_human_seg", "u2net_cloth_seg",
-                                    "silueta", "isnet-general-use", "isnet-anime",
-                                    "birefnet-general", "birefnet-general-lite",
-                                    "birefnet-portrait", "birefnet-dis", "birefnet-hrsod",
-                                    "birefnet-cod", "birefnet-massive", "sam"
-                                ]
+                                "oneOf": model_enum_with_descriptions
                             },
                             "alpha_matting": {
                                 "type": "boolean",
@@ -130,7 +200,7 @@ class RembgMCPServer:
             else:
                 raise ValueError(f"Unknown tool: {name}")
 
-    async def _handle_rembg_i(self, arguments: Dict[str, Any]) -> List[types.TextContent]:
+    async def _handle_rembg_i(self, arguments: Dict[str, Any]) -> List[types.TextContent | types.ImageContent | types.EmbeddedResource]:
         """Handle single image background removal."""
         try:
             input_path = Path(arguments["input_path"])
@@ -178,7 +248,7 @@ class RembgMCPServer:
                 text=f"Error processing image: {str(e)}"
             )]
 
-    async def _handle_rembg_p(self, arguments: Dict[str, Any]) -> List[types.TextContent]:
+    async def _handle_rembg_p(self, arguments: Dict[str, Any]) -> List[types.TextContent | types.ImageContent | types.EmbeddedResource]:
         """Handle batch folder processing."""
         try:
             input_folder = Path(arguments["input_folder"])
