@@ -35,6 +35,7 @@ The setup scripts will automatically:
 - Install all dependencies
 - Configure MCP server
 - Test the installation
+- Guide you through AI model downloads
 
 ### 🔧 Manual Installation
 
@@ -61,7 +62,14 @@ python test_server.py
 python validate_setup.py
 ```
 
-4. **For GPU support:**
+4. **Download AI models:**
+```bash
+./download_models.sh     # Linux/macOS
+# or
+python download_models.py  # Windows (from activated venv)
+```
+
+5. **For GPU support:**
 ```bash
 pip install -e ".[gpu]"
 ```
@@ -238,6 +246,39 @@ Processes all images in a folder automatically.
 | `birefnet-massive` | Massive dataset trained | X-Large | Best |
 | `sam` | Segment Anything (prompt-based) | Large | Variable |
 
+### 🎯 Model Recommendations
+
+**For beginners:** Start with `u2net` (default) - good balance of speed and quality
+
+**For best quality:** Use `birefnet-general` or `birefnet-massive`
+
+**For portraits:** Use `birefnet-portrait` - specialized for human subjects
+
+**For anime/cartoons:** Use `isnet-anime` - optimized for animated content
+
+**For speed:** Use `u2netp` or `silueta` - faster processing for batch jobs
+
+### 📥 Downloading Models
+
+Models are downloaded automatically when first used, but you can pre-download them:
+
+```bash
+# Interactive selection (recommended)
+./download_models.sh              # Linux/macOS
+
+# Download specific models
+./download_models.sh u2net birefnet-portrait
+
+# Download all models
+./download_models.sh all
+
+# Windows (from activated virtual environment)
+python download_models.py         # Interactive
+python download_models.py u2net birefnet-portrait
+```
+
+Models are cached in `~/.u2net/` and only need to be downloaded once.
+
 ## 🔧 Configuration
 
 ### Environment Variables
@@ -270,6 +311,8 @@ rembg-mcp/
 ├── claude_desktop_config_windows.json # Claude Desktop config (Windows)
 ├── test_server.py                     # Installation test
 ├── validate_setup.py                  # Comprehensive setup validation
+├── download_models.py                 # AI model download utility (Python)
+├── download_models.sh                 # AI model download script (Linux/macOS)
 ├── example_usage.py                   # Usage examples
 ├── README.md                          # This file
 ├── USAGE_CN.md                       # Chinese documentation
@@ -295,7 +338,14 @@ python --version  # Must be 3.10+
 ```bash
 # Clear model cache and re-download
 rm -rf ~/.u2net
-# Models will automatically re-download on next use
+
+# Re-download models manually
+./download_models.sh              # Linux/macOS
+python download_models.py         # Windows
+
+# Download a specific model
+./download_models.sh u2net        # Linux/macOS
+python download_models.py u2net   # Windows
 ```
 
 **Memory or Performance Issues**

@@ -153,6 +153,33 @@ print_status "Testing server startup..."
 timeout 5s ./start_server.sh 2>/dev/null || true
 print_success "Server startup test completed"
 
+# Model download section
+echo
+print_status "🤖 AI Model Setup"
+echo "Rembg requires AI models to remove backgrounds. Models are cached locally (~/.u2net)"
+echo "and only need to be downloaded once."
+echo
+
+# Check if any models already exist
+MODEL_CACHE="$HOME/.u2net"
+if [ -d "$MODEL_CACHE" ] && [ "$(ls -A $MODEL_CACHE 2>/dev/null)" ]; then
+    print_success "Found existing models in cache"
+    ls -la "$MODEL_CACHE"/*.onnx 2>/dev/null | awk '{print "  • " $9}' || true
+    echo
+fi
+
+read -p "Would you like to download AI models now? (Y/n): " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]] || [[ -z $REPLY ]]; then
+    print_status "Starting model download..."
+    ./download_models.sh
+    echo
+else
+    print_warning "Skipping model download."
+    print_warning "Models will be downloaded automatically when first used, but this may cause delays."
+    echo "You can download models later by running: ./download_models.sh"
+fi
+
 # Print setup summary
 echo
 print_success "🎉 Rembg MCP Server setup completed successfully!"

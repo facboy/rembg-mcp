@@ -114,6 +114,31 @@ echo }
 
 echo [SUCCESS] Created claude_desktop_config_windows.json
 
+REM Model download section
+echo.
+echo [INFO] 🤖 AI Model Setup
+echo Rembg requires AI models to remove backgrounds. Models are cached locally (%%USERPROFILE%%\.u2net^)
+echo and only need to be downloaded once.
+echo.
+
+REM Check if any models already exist
+if exist "%USERPROFILE%\.u2net\*.onnx" (
+    echo [SUCCESS] Found existing models in cache
+    dir "%USERPROFILE%\.u2net\*.onnx" /b 2>nul
+    echo.
+)
+
+set /p MODEL_CHOICE="Would you like to download AI models now? (Y/n): "
+if /i "!MODEL_CHOICE!"=="n" (
+    echo [WARNING] Skipping model download.
+    echo [WARNING] Models will be downloaded automatically when first used, but this may cause delays.
+    echo You can download models later by running: python download_models.py
+) else (
+    echo [INFO] Starting model download...
+    call rembg\Scripts\activate.bat && python download_models.py
+    echo.
+)
+
 echo.
 echo 🎉 Rembg MCP Server setup completed successfully!
 echo.
