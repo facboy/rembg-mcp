@@ -374,7 +374,6 @@ rm -rf rembg/
 - [Rembg Library Documentation](https://github.com/danielgatis/rembg)
 - [MCP Protocol Specification](https://modelcontextprotocol.io/)
 - [Claude Code Documentation](https://claude.ai/code)
-- [Chinese Usage Guide](./USAGE_CN.md)
 
 ## 🤝 Contributing
 
