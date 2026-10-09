@@ -11,7 +11,7 @@ license = "MIT"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "mcp>=1.0.0",
+    "mcp>=2.0.0",
     "rembg[cpu,cli]>=2.0.0",
     "pillow>=10.0.0",
 ]
@@ -20,7 +20,8 @@ dependencies = [
 include = ["rembg_mcp*"]
 
 [project.optional-dependencies]
-gpu = ["rembg[gpu,cli]>=2.0.0"]
+# onnxruntime-gpu ships no CUDA libraries; its cuda/cudnn extras pull the ones it was built against.
+gpu = ["rembg[gpu,cli]>=2.0.0", "onnxruntime-gpu[cuda,cudnn]>=1.23.2"]
 
 [dependency-groups]
 dev = [
@@ -28,7 +29,12 @@ dev = [
     "black>=23.0.0",
     "mypy>=1.0.0",
 ]
+# Included in the default group set so `uv sync` keeps it once enabled.
+gpu = ["rembg-mcp[gpu]"]
 
+[tool.uv]
+# setup.sh adds "gpu" here to opt into GPU support; a bare `uv sync` then preserves it.
+default-groups = ["dev", "gpu"]
 [project.scripts]
 rembg-mcp = "rembg_mcp.server:main"
 

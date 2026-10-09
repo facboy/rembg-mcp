@@ -59,12 +59,17 @@ print_success "Python $PYTHON_VERSION ready"
 
 # Test the installation
 print_status "Testing installation..."
-if uv run python test_server.py; then
-    print_success "Installation test passed!"
-else
-    print_error "Installation test failed!"
-    exit 1
+if ! uv run python test_server.py; then
+    # onnxruntime and onnxruntime-gpu share site-packages/onnxruntime, so a sync that
+    # swaps backends can leave the CPU package half-removed. Reinstall clears that.
+    print_warning "Installation test failed; repairing the onnxruntime install..."
+    uv sync --reinstall-package onnxruntime
+    if ! uv run python test_server.py; then
+        print_error "Installation test failed!"
+        exit 1
+    fi
 fi
+print_success "Installation test passed!"
 
 # Run comprehensive validation
 print_status "Running comprehensive validation..."
@@ -88,7 +93,8 @@ read -p "Do you want to install GPU support? (y/N): " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     print_status "Installing GPU support..."
-    uv sync --extra gpu
+    uv run --no-sync python set_gpu.py enable
+    uv sync
     print_success "GPU support installed!"
     print_warning "Note: GPU support requires CUDA or ROCm to be properly configured"
 fi
@@ -114,9 +120,9 @@ EOF
 
 print_success "Updated claude_desktop_config.json with current path"
 
-# Test server startup (quick test)
+# Test server startup (quick test); stdin is detached so the server cannot consume the prompts below
 print_status "Testing server startup..."
-timeout 5s ./start_server.sh 2>/dev/null || true
+timeout 5s ./start_server.sh < /dev/null 2>/dev/null || true
 print_success "Server startup test completed"
 
 # Model download section

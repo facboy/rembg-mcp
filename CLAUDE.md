@@ -125,7 +125,7 @@ rembg-mcp/
 uv sync
 
 # Install with GPU support
-uv sync --extra gpu
+uv run python set_gpu.py enable && uv sync
 
 # Run the MCP server
 ./start_server.sh

@@ -10,7 +10,6 @@ from typing import Any, Dict, List, Optional
 import mcp.server.stdio
 import mcp.types as types
 from mcp.server import NotificationOptions, Server
-from mcp.server.models import InitializationOptions
 from PIL import Image
 from rembg import new_session, remove
 from rembg.sessions import sessions_names
@@ -20,7 +19,7 @@ class RembgMCPServer:
     """MCP Server for rembg background removal operations."""
 
     def __init__(self) -> None:
-        self.server = Server("rembg-mcp")
+        self.server = Server("rembg-mcp", version="0.1.0")
         self._sessions: Dict[str, Any] = {}
         self._model_descriptions = self._get_model_descriptions()
         self._setup_handlers()
@@ -99,10 +98,11 @@ class RembgMCPServer:
         return available_models if available_models else sessions_names
 
     def _setup_handlers(self) -> None:
-        """Set up MCP handlers."""
+        """Register the MCP request handlers."""
 
-        @self.server.list_tools()
-        async def handle_list_tools() -> List[types.Tool]:
+        async def handle_list_tools(
+            ctx: Any, params: types.PaginatedRequestParams | None
+        ) -> types.ListToolsResult:
             """List available tools."""
             available_models = self._get_available_models()
             model_enum_with_descriptions = []
@@ -111,7 +111,7 @@ class RembgMCPServer:
                 description = self._model_descriptions.get(model, f"Model: {model}")
                 model_enum_with_descriptions.append({"const": model, "description": description})
 
-            return [
+            tools = [
                 types.Tool(
                     name="rembg-i",
                     description="Remove background from a single image file",
@@ -187,18 +187,28 @@ class RembgMCPServer:
                     }
                 )
             ]
+            return types.ListToolsResult(tools=tools)
 
-        @self.server.call_tool()
         async def handle_call_tool(
-            name: str, arguments: Dict[str, Any]
-        ) -> List[types.TextContent | types.ImageContent | types.EmbeddedResource]:
+            ctx: Any, params: types.CallToolRequestParams
+        ) -> types.CallToolResult:
             """Handle tool calls."""
+            name = params.name
+            arguments = params.arguments or {}
             if name == "rembg-i":
-                return await self._handle_rembg_i(arguments)
+                content = await self._handle_rembg_i(arguments)
             elif name == "rembg-p":
-                return await self._handle_rembg_p(arguments)
+                content = await self._handle_rembg_p(arguments)
             else:
                 raise ValueError(f"Unknown tool: {name}")
+            return types.CallToolResult(content=content)
+
+        self.server.add_request_handler(
+            "tools/list", types.PaginatedRequestParams, handle_list_tools
+        )
+        self.server.add_request_handler(
+            "tools/call", types.CallToolRequestParams, handle_call_tool
+        )
 
     async def _handle_rembg_i(self, arguments: Dict[str, Any]) -> List[types.TextContent | types.ImageContent | types.EmbeddedResource]:
         """Handle single image background removal."""
@@ -346,13 +356,9 @@ class RembgMCPServer:
             await self.server.run(
                 read_stream,
                 write_stream,
-                InitializationOptions(
-                    server_name="rembg-mcp",
-                    server_version="0.1.0",
-                    capabilities=self.server.get_capabilities(
-                        notification_options=NotificationOptions(),
-                        experimental_capabilities={},
-                    ),
+                self.server.create_initialization_options(
+                    notification_options=NotificationOptions(),
+                    experimental_capabilities={},
                 ),
             )
 

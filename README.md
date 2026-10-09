@@ -60,8 +60,13 @@ uv run python download_models.py  # Windows
 
 4. **For GPU support:**
 ```bash
-uv sync --extra gpu
+python3 set_gpu.py enable
+uv sync
 ```
+
+GPU support is recorded in `pyproject.toml`, so later `uv sync` runs keep it. Reverse it with `python3 set_gpu.py disable`.
+
+The `gpu` extra also pulls the CUDA libraries `onnxruntime-gpu` needs, through its own `cuda`/`cudnn` extras. Their names differ by build — cu13 on Python 3.11+, cu12 on older versions — so let the extras pick them rather than pinning `nvidia-*-cu12` yourself.
 
 ## 🔧 MCP Configuration
 
@@ -294,6 +299,7 @@ rembg-mcp/
 ├── uv.lock                           # Locked dependency set
 ├── setup.sh                          # Linux/macOS setup script
 ├── setup.bat                         # Windows setup script
+├── set_gpu.py                        # Toggle GPU support in pyproject.toml
 ├── start_server.sh                   # Linux/macOS server startup
 ├── start_server.bat                  # Windows server startup (generated)
 ├── pyproject.toml                    # Python package configuration

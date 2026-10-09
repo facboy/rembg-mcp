@@ -38,9 +38,16 @@ REM Test installation
 echo [INFO] Testing installation...
 uv run python test_server.py
 if errorlevel 1 (
-    echo [ERROR] Installation test failed!
-    pause
-    exit /b 1
+    REM onnxruntime and onnxruntime-gpu share site-packages\onnxruntime, so a sync that
+    REM swaps backends can leave the CPU package half-removed. Reinstall clears that.
+    echo [WARNING] Installation test failed; repairing the onnxruntime install...
+    uv sync --reinstall-package onnxruntime
+    uv run python test_server.py
+    if errorlevel 1 (
+        echo [ERROR] Installation test failed!
+        pause
+        exit /b 1
+    )
 )
 
 echo [SUCCESS] Installation test passed!
@@ -54,7 +61,8 @@ echo.
 set /p GPU_CHOICE="Do you want to install GPU support? (y/N): "
 if /i "!GPU_CHOICE!"=="y" (
     echo [INFO] Installing GPU support...
-    uv sync --extra gpu
+    uv run --no-sync python set_gpu.py enable
+    uv sync
     echo [SUCCESS] GPU support installed!
     echo [WARNING] Note: GPU support requires CUDA to be properly configured
 )

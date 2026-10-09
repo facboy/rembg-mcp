@@ -33,9 +33,10 @@ def test_tools_listing():
 
         async def check_tools():
             server = RembgMCPServer()
-            # Test if the server has the expected methods
-            if hasattr(server.server, '_handlers') and 'list_tools' in server.server._handlers:
-                tools = await server.server._handlers["list_tools"]()
+            entry = server.server.get_request_handler("tools/list")
+            if entry is not None:
+                result = await entry.handler(None, None)
+                tools = result.tools
                 print(f"✓ Found {len(tools)} tools: {[tool.name for tool in tools]}")
                 return len(tools) == 2
             else:
