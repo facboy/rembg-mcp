@@ -1,6 +1,8 @@
 .claude
 test
 rembg/
+.venv/
+.uv/
 output/
 **/__pycache__/
 *.pyc

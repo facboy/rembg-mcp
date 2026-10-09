@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Model Download Script for Rembg MCP Server
-# This script activates the virtual environment and runs the Python model downloader
+# This script runs the Python model downloader through the uv-managed environment
 
 # Colors for output
 RED='\033[0;31m'
@@ -34,25 +34,24 @@ cd "$SCRIPT_DIR"
 print_status "🤖 Rembg Model Download Utility"
 echo "=" * 40
 
-# Check if virtual environment exists
-if [ ! -d "rembg" ]; then
-    print_error "Virtual environment 'rembg' not found!"
-    print_error "Please run setup.sh first to create the environment."
+# Check if uv is available
+if ! command -v uv >/dev/null 2>&1; then
+    print_error "uv is not installed. See https://docs.astral.sh/uv/ for installation instructions."
     exit 1
 fi
 
-# Check if virtual environment has rembg installed
-print_status "Activating virtual environment..."
-source rembg/bin/activate
+# Ensure the environment is synced
+print_status "Syncing environment with uv..."
+uv sync
 
 # Verify rembg is available
-if ! python -c "import rembg" 2>/dev/null; then
-    print_error "Rembg is not installed in the virtual environment!"
+if ! uv run python -c "import rembg" 2>/dev/null; then
+    print_error "Rembg is not installed in the uv environment!"
     print_error "Please run setup.sh to install dependencies."
     exit 1
 fi
 
-print_success "Virtual environment activated and rembg is available"
+print_success "uv environment ready and rembg is available"
 
 # Set environment variables
 export REMBG_HOME="$HOME/.u2net"
@@ -60,7 +59,7 @@ export OMP_NUM_THREADS=4
 
 # Run the Python download script with any arguments passed to this script
 print_status "Starting model download script..."
-python download_models.py "$@"
+uv run python download_models.py "$@"
 
 # Check exit status
 if [ $? -eq 0 ]; then

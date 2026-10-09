@@ -21,6 +21,8 @@ include = ["rembg_mcp*"]
 
 [project.optional-dependencies]
 gpu = ["rembg[gpu,cli]>=2.0.0"]
+
+[dependency-groups]
 dev = [
     "pytest>=7.0.0",
     "black>=23.0.0",

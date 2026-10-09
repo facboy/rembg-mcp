@@ -30,9 +30,8 @@ setup.bat
 ```
 
 The setup scripts will automatically:
-- Check Python 3.10+ requirement
-- Create virtual environment
-- Install all dependencies
+- Check the uv requirement
+- Create the virtual environment and install all dependencies from uv.lock
 - Configure MCP server
 - Test the installation
 - Guide you through AI model downloads
@@ -41,37 +40,27 @@ The setup scripts will automatically:
 
 If you prefer manual installation or need custom configuration:
 
-1. **Create virtual environment:**
+1. **Create the environment:**
 ```bash
-python3 -m venv rembg
-source rembg/bin/activate  # Linux/macOS
+uv sync
+```
+
+2. **Test installation:**
+```bash
+uv run python test_server.py
+uv run python validate_setup.py
+```
+
+3. **Download AI models:**
+```bash
+./download_models.sh             # Linux/macOS
 # or
-rembg\Scripts\activate.bat  # Windows
+uv run python download_models.py  # Windows
 ```
 
-2. **Install dependencies:**
+4. **For GPU support:**
 ```bash
-pip install --upgrade pip
-pip install mcp "rembg[cpu,cli]" pillow
-pip install -e .
-```
-
-3. **Test installation:**
-```bash
-python test_server.py
-python validate_setup.py
-```
-
-4. **Download AI models:**
-```bash
-./download_models.sh     # Linux/macOS
-# or
-python download_models.py  # Windows (from activated venv)
-```
-
-5. **For GPU support:**
-```bash
-pip install -e ".[gpu]"
+uv sync --extra gpu
 ```
 
 ## 🔧 MCP Configuration
@@ -272,9 +261,9 @@ Models are downloaded automatically when first used, but you can pre-download th
 # Download all models
 ./download_models.sh all
 
-# Windows (from activated virtual environment)
-python download_models.py         # Interactive
-python download_models.py u2net birefnet-portrait
+# Windows (through the uv environment)
+uv run python download_models.py         # Interactive
+uv run python download_models.py u2net birefnet-portrait
 ```
 
 Models are cached in `~/.u2net/` and only need to be downloaded once.
@@ -301,22 +290,23 @@ rembg-mcp/
 ├── rembg_mcp/
 │   ├── __init__.py
 │   └── server.py                      # Main MCP server implementation
-├── rembg/                             # Virtual environment (git-ignored)
-├── setup.sh                           # Linux/macOS setup script
-├── setup.bat                          # Windows setup script
-├── start_server.sh                    # Linux/macOS server startup
-├── start_server.bat                   # Windows server startup (generated)
-├── pyproject.toml                     # Python package configuration
-├── claude_desktop_config.json         # Claude Desktop config (Linux/macOS)
+├── .venv/                            # uv virtual environment (git-ignored)
+├── uv.lock                           # Locked dependency set
+├── setup.sh                          # Linux/macOS setup script
+├── setup.bat                         # Windows setup script
+├── start_server.sh                   # Linux/macOS server startup
+├── start_server.bat                  # Windows server startup (generated)
+├── pyproject.toml                    # Python package configuration
+├── claude_desktop_config.json        # Claude Desktop config (Linux/macOS)
 ├── claude_desktop_config_windows.json # Claude Desktop config (Windows)
-├── test_server.py                     # Installation test
-├── validate_setup.py                  # Comprehensive setup validation
-├── download_models.py                 # AI model download utility (Python)
-├── download_models.sh                 # AI model download script (Linux/macOS)
-├── example_usage.py                   # Usage examples
-├── README.md                          # This file
-├── USAGE_CN.md                       # Chinese documentation
-└── CLAUDE.md                         # Claude Code context file
+├── test_server.py                    # Installation test
+├── validate_setup.py                 # Comprehensive setup validation
+├── download_models.py                # AI model download utility (Python)
+├── download_models.sh                # AI model download script (Linux/macOS)
+├── example_usage.py                  # Usage examples
+├── README.md                         # This file
+├── USAGE_CN.md                      # Chinese documentation
+└── CLAUDE.md                        # Claude Code context file
 ```
 
 ## 🚨 Troubleshooting
@@ -326,12 +316,12 @@ rembg-mcp/
 **MCP Server Not Found**
 - Verify the `command` path in your MCP configuration
 - Ensure the script is executable: `chmod +x start_server.sh`
-- Check that the virtual environment exists: `ls rembg/`
+- Check that the uv environment exists: `.venv/` or run `uv sync`
 
 **Python Version Issues**
 ```bash
-python --version  # Must be 3.10+
-# If wrong version, install Python 3.10+ and recreate venv
+uv run python --version  # Must be 3.10+
+# If wrong version, install Python 3.10+ or pin it in pyproject.toml
 ```
 
 **Model Download Problems**
@@ -341,11 +331,11 @@ rm -rf ~/.u2net
 
 # Re-download models manually
 ./download_models.sh              # Linux/macOS
-python download_models.py         # Windows
+uv run python download_models.py  # Windows
 
 # Download a specific model
 ./download_models.sh u2net        # Linux/macOS
-python download_models.py u2net   # Windows
+uv run python download_models.py u2net   # Windows
 ```
 
 **Memory or Performance Issues**
@@ -359,13 +349,14 @@ export OMP_NUM_THREADS=2
 **Installation Problems**
 ```bash
 # Clean reinstall
-rm -rf rembg/
+rm -rf .venv/
+uv sync
 ./setup.sh  # Or setup.bat on Windows
 ```
 
 ### Getting Help
 
-- Run `python validate_setup.py` for detailed diagnostics
+- Run `uv run python validate_setup.py` for detailed diagnostics
 - Check server logs when starting manually
 - Ensure your MCP client supports the latest protocol version
 

@@ -41,59 +41,25 @@ cd "$SCRIPT_DIR"
 print_status "Starting Rembg MCP Server setup..."
 print_status "Working directory: $SCRIPT_DIR"
 
-# Check Python version
-print_status "Checking Python installation..."
-if ! command_exists python3; then
-    print_error "Python 3 is not installed. Please install Python 3.10+ first."
+# Check uv installation
+print_status "Checking uv installation..."
+if ! command_exists uv; then
+    print_error "uv is not installed. See https://docs.astral.sh/uv/ for installation instructions."
     exit 1
 fi
 
-PYTHON_VERSION=$(python3 --version 2>&1 | cut -d' ' -f2)
-PYTHON_MAJOR=$(echo $PYTHON_VERSION | cut -d'.' -f1)
-PYTHON_MINOR=$(echo $PYTHON_VERSION | cut -d'.' -f2)
+print_success "uv $(uv --version | cut -d' ' -f2) found"
 
-if [ "$PYTHON_MAJOR" -lt 3 ] || ([ "$PYTHON_MAJOR" -eq 3 ] && [ "$PYTHON_MINOR" -lt 10 ]); then
-    print_error "Python 3.10+ is required. Found: $PYTHON_VERSION"
-    exit 1
-fi
+# Create the virtual environment and install all dependencies from pyproject.toml / uv.lock
+print_status "Syncing environment with uv..."
+uv sync
 
-print_success "Python $PYTHON_VERSION found"
-
-# Remove existing virtual environment if it exists
-if [ -d "rembg" ]; then
-    print_warning "Existing virtual environment found. Removing..."
-    rm -rf rembg
-fi
-
-# Create virtual environment
-print_status "Creating virtual environment 'rembg'..."
-python3 -m venv rembg
-
-# Activate virtual environment
-print_status "Activating virtual environment..."
-source rembg/bin/activate
-
-# Upgrade pip
-print_status "Upgrading pip..."
-pip install --upgrade pip
-
-# Install core dependencies
-print_status "Installing MCP Python SDK..."
-pip install mcp
-
-print_status "Installing rembg with CPU support..."
-pip install "rembg[cpu,cli]"
-
-print_status "Installing additional dependencies..."
-pip install pillow
-
-# Install the MCP server in development mode
-print_status "Installing rembg-mcp in development mode..."
-pip install -e .
+PYTHON_VERSION=$(uv run python --version 2>&1 | cut -d' ' -f2)
+print_success "Python $PYTHON_VERSION ready"
 
 # Test the installation
 print_status "Testing installation..."
-if python test_server.py; then
+if uv run python test_server.py; then
     print_success "Installation test passed!"
 else
     print_error "Installation test failed!"
@@ -102,7 +68,7 @@ fi
 
 # Run comprehensive validation
 print_status "Running comprehensive validation..."
-if python validate_setup.py; then
+if uv run python validate_setup.py; then
     print_success "All validation checks passed!"
 else
     print_warning "Some validation checks failed, but basic installation completed"
@@ -122,7 +88,7 @@ read -p "Do you want to install GPU support? (y/N): " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     print_status "Installing GPU support..."
-    pip install "rembg[gpu,cli]" --upgrade
+    uv sync --extra gpu
     print_success "GPU support installed!"
     print_warning "Note: GPU support requires CUDA or ROCm to be properly configured"
 fi
@@ -185,8 +151,8 @@ echo
 print_success "🎉 Rembg MCP Server setup completed successfully!"
 echo
 echo "📋 Setup Summary:"
-echo "  ✓ Virtual environment created: $SCRIPT_DIR/rembg"
-echo "  ✓ Dependencies installed"
+echo "  ✓ uv environment synced: $SCRIPT_DIR/.venv"
+echo "  ✓ Dependencies installed from uv.lock"
 echo "  ✓ MCP server installed in development mode"
 echo "  ✓ Scripts made executable"
 echo "  ✓ Configuration files updated"

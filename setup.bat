@@ -13,54 +13,30 @@ cd /d "%SCRIPT_DIR%"
 
 echo [INFO] Working directory: %SCRIPT_DIR%
 
-REM Check Python installation
-echo [INFO] Checking Python installation...
-python --version >nul 2>&1
+REM Check uv installation
+echo [INFO] Checking uv installation...
+where uv >nul 2>&1
 if errorlevel 1 (
-    echo [ERROR] Python is not installed or not in PATH
-    echo Please install Python 3.10+ from https://python.org
+    echo [ERROR] uv is not installed or not in PATH
+    echo See https://docs.astral.sh/uv/ for installation instructions
     pause
     exit /b 1
 )
 
-for /f "tokens=2" %%i in ('python --version') do set PYTHON_VERSION=%%i
-echo [SUCCESS] Python %PYTHON_VERSION% found
+echo [SUCCESS] uv found
 
-REM Remove existing virtual environment
-if exist "rembg" (
-    echo [WARNING] Removing existing virtual environment...
-    rmdir /s /q rembg
+REM Create the virtual environment and install all dependencies from pyproject.toml / uv.lock
+echo [INFO] Syncing environment with uv...
+uv sync
+if errorlevel 1 (
+    echo [ERROR] uv sync failed!
+    pause
+    exit /b 1
 )
-
-REM Create virtual environment
-echo [INFO] Creating virtual environment 'rembg'...
-python -m venv rembg
-
-REM Activate virtual environment
-echo [INFO] Activating virtual environment...
-call rembg\Scripts\activate.bat
-
-REM Upgrade pip
-echo [INFO] Upgrading pip...
-python -m pip install --upgrade pip
-
-REM Install dependencies
-echo [INFO] Installing MCP Python SDK...
-pip install mcp
-
-echo [INFO] Installing rembg with CPU support...
-pip install "rembg[cpu,cli]"
-
-echo [INFO] Installing additional dependencies...
-pip install pillow
-
-REM Install the MCP server
-echo [INFO] Installing rembg-mcp in development mode...
-pip install -e .
 
 REM Test installation
 echo [INFO] Testing installation...
-python test_server.py
+uv run python test_server.py
 if errorlevel 1 (
     echo [ERROR] Installation test failed!
     pause
@@ -78,7 +54,7 @@ echo.
 set /p GPU_CHOICE="Do you want to install GPU support? (y/N): "
 if /i "!GPU_CHOICE!"=="y" (
     echo [INFO] Installing GPU support...
-    pip install "rembg[gpu,cli]" --upgrade
+    uv sync --extra gpu
     echo [SUCCESS] GPU support installed!
     echo [WARNING] Note: GPU support requires CUDA to be properly configured
 )
@@ -89,11 +65,10 @@ echo @echo off > start_server.bat
 echo REM Start the Rembg MCP Server on Windows >> start_server.bat
 echo set "SCRIPT_DIR=%%~dp0" >> start_server.bat
 echo cd /d "%%SCRIPT_DIR%%" >> start_server.bat
-echo call rembg\Scripts\activate.bat >> start_server.bat
 echo set REMBG_HOME=%%USERPROFILE%%\.u2net >> start_server.bat
 echo set OMP_NUM_THREADS=4 >> start_server.bat
 echo echo Starting Rembg MCP Server... >> start_server.bat
-echo python -m rembg_mcp.server >> start_server.bat
+echo uv run --no-sync python -m rembg_mcp.server >> start_server.bat
 
 REM Generate configuration for Windows
 echo [INFO] Generating configuration files...
@@ -132,10 +107,10 @@ set /p MODEL_CHOICE="Would you like to download AI models now? (Y/n): "
 if /i "!MODEL_CHOICE!"=="n" (
     echo [WARNING] Skipping model download.
     echo [WARNING] Models will be downloaded automatically when first used, but this may cause delays.
-    echo You can download models later by running: python download_models.py
+    echo You can download models later by running: .\download_models.py
 ) else (
     echo [INFO] Starting model download...
-    call rembg\Scripts\activate.bat && python download_models.py
+    uv run python download_models.py
     echo.
 )
 
@@ -143,8 +118,8 @@ echo.
 echo 🎉 Rembg MCP Server setup completed successfully!
 echo.
 echo 📋 Setup Summary:
-echo   ✓ Virtual environment created: %SCRIPT_DIR%rembg
-echo   ✓ Dependencies installed
+echo   ✓ uv environment synced: %SCRIPT_DIR%.venv
+echo   ✓ Dependencies installed from uv.lock
 echo   ✓ MCP server installed in development mode
 echo   ✓ Windows scripts created
 echo   ✓ Configuration files updated

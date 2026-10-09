@@ -12,18 +12,18 @@ This is an MCP (Model Context Protocol) implementation for **rembg**, a popular 
 
 ### Python Environment
 - **Python Version**: 3.10-3.13 (as specified in rembg's setup.py)
-- **Package Manager**: pip with setuptools
+- **Package Manager**: uv (dependencies declared in pyproject.toml, locked in uv.lock)
 
 ### Testing
 ```bash
 # Run tests (if rembg source is available)
-python -m pytest
+uv run pytest
 ```
 
 ### Development Installation
 ```bash
-# Install rembg in development mode
-pip install -e ".[dev,cpu,cli]"  # or [gpu] for GPU support
+# Create the environment and install the project with dev dependencies
+uv sync
 ```
 
 ### Code Quality
@@ -122,18 +122,18 @@ rembg-mcp/
 ./setup.sh
 
 # Or manual installation
-pip install -e .
+uv sync
 
 # Install with GPU support
-pip install -e ".[gpu]"
+uv sync --extra gpu
 
 # Run the MCP server
 ./start_server.sh
-# Or manually: python -m rembg_mcp.server
+# Or manually: uv run python -m rembg_mcp.server
 
 # Test installation
-python test_server.py
-python validate_setup.py
+uv run python test_server.py
+uv run python validate_setup.py
 ```
 
 ## Dependencies

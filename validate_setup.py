@@ -30,8 +30,8 @@ def main():
     )
 
     # Check virtual environment
-    venv_exists = Path("rembg").exists()
-    all_checks_passed &= check_mark(venv_exists, "Virtual environment exists")
+    venv_exists = Path(".venv").exists()
+    all_checks_passed &= check_mark(venv_exists, "uv virtual environment exists")
 
     # Check if we're in the virtual environment
     in_venv = hasattr(sys, 'real_prefix') or (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix)
@@ -98,7 +98,7 @@ def main():
         print("❌ Some checks failed. Please review the issues above.")
         print("\nTroubleshooting:")
         print("1. Run the setup script again: ./setup.sh")
-        print("2. Check the virtual environment: source rembg/bin/activate")
+        print("2. Sync the environment: uv sync")
         print("3. Reinstall dependencies if needed")
         return 1
 

@@ -321,9 +321,8 @@ def main():
     # Check if rembg is available
     if not check_rembg_available():
         print("❌ Error: rembg is not installed or not available in current environment")
-        print("Please run this script from the activated virtual environment:")
-        print("  source rembg/bin/activate")
-        print("  python download_models.py")
+        print("Please run this script through the uv environment:")
+        print("  uv run python download_models.py")
         sys.exit(1)
 
     # Check model cache directory
@@ -347,7 +346,7 @@ def main():
         if sys.argv[1].lower() == "delete":
             # Delete mode from command line
             if len(sys.argv) < 3:
-                print("❌ Delete mode requires model names. Usage: python download_models.py delete model1 model2")
+                print("❌ Delete mode requires model names. Usage: uv run python download_models.py delete model1 model2")
                 return
             result = {"action": "delete", "models": sys.argv[2:]}
         else:
@@ -363,7 +362,7 @@ def main():
 
     if action == "skip" or not selected_models:
         print("\n⏭️  No operation performed.")
-        print("You can manage models later by running: python download_models.py")
+        print("You can manage models later by running: uv run python download_models.py")
         return
 
     if action == "delete":
@@ -417,7 +416,7 @@ def main():
         if failed_models:
             print(f"   ❌ Failed downloads: {', '.join(failed_models)}")
             print("\nYou can retry failed downloads by running:")
-            print(f"   python download_models.py {' '.join(failed_models)}")
+            print(f"   uv run python download_models.py {' '.join(failed_models)}")
 
         if success_count > 0:
             print(f"\n🎉 Ready to use! Your models are cached in: {cache_dir}")
@@ -429,9 +428,9 @@ def main():
     print("   • isnet-anime: Perfect for anime/cartoon images")
     print("   • silueta/u2netp: Fast processing for batch jobs")
     print("\n📖 Usage Examples:")
-    print("   python download_models.py              # Interactive mode")
-    print("   python download_models.py u2net        # Download specific model")
-    print("   python download_models.py delete u2net # Delete specific model")
+    print("   uv run python download_models.py              # Interactive mode")
+    print("   uv run python download_models.py u2net        # Download specific model")
+    print("   uv run python download_models.py delete u2net # Delete specific model")
 
 if __name__ == "__main__":
     main()
