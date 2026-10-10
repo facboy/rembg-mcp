@@ -4,6 +4,7 @@
 import asyncio
 import os
 import sys
+from collections import OrderedDict
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -18,9 +19,11 @@ from rembg.sessions import sessions_names
 class RembgMCPServer:
     """MCP Server for rembg background removal operations."""
 
+    _MAX_SESSIONS = 1
+
     def __init__(self) -> None:
         self.server = Server("rembg-mcp", version="0.1.0")
-        self._sessions: Dict[str, Any] = {}
+        self._sessions: Dict[str, Any] = OrderedDict()
         self._model_descriptions = self._get_model_descriptions()
         self._setup_handlers()
 
@@ -345,9 +348,22 @@ class RembgMCPServer:
             )]
 
     def _get_session(self, model_name: str) -> Any:
-        """Get or create a rembg session for the specified model."""
-        if model_name not in self._sessions:
-            self._sessions[model_name] = new_session(model_name)
+        """Return the session for a model, keeping at most one loaded.
+
+        Models cost hundreds of MB each, so the cache is an LRU of size one:
+        requesting another model releases the previous one. A batch keeps
+        reusing its session until a different model is asked for.
+        """
+        session = self._sessions.get(model_name)
+        if session is not None:
+            self._sessions.move_to_end(model_name)
+            return session
+
+        while len(self._sessions) >= self._MAX_SESSIONS:
+            _, evicted = self._sessions.popitem(last=False)
+            evicted.inner_session = None
+
+        self._sessions[model_name] = new_session(model_name)
         return self._sessions[model_name]
 
     async def run(self) -> None:
