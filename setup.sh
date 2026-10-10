@@ -71,6 +71,10 @@ if ! uv run python test_server.py; then
 fi
 print_success "Installation test passed!"
 
+# Create model cache directory (rembg's default location), so validation finds it
+print_status "Creating model cache directory..."
+mkdir -p "$HOME/.rembg"
+
 # Run comprehensive validation
 print_status "Running comprehensive validation..."
 if uv run python validate_setup.py; then
@@ -82,10 +86,6 @@ fi
 # Make scripts executable
 print_status "Making scripts executable..."
 chmod +x start_server.sh
-
-# Create model cache directory
-print_status "Creating model cache directory..."
-mkdir -p "$HOME/.u2net"
 
 # Check if user wants GPU support
 echo
@@ -110,7 +110,6 @@ cat > claude_desktop_config.json << EOF
       "command": "$SCRIPT_DIR/start_server.sh",
       "cwd": "$SCRIPT_DIR",
       "env": {
-        "REMBG_HOME": "~/.u2net",
         "OMP_NUM_THREADS": "4"
       }
     }
@@ -128,15 +127,15 @@ print_success "Server startup test completed"
 # Model download section
 echo
 print_status "🤖 AI Model Setup"
-echo "Rembg requires AI models to remove backgrounds. Models are cached locally (~/.u2net)"
+echo "Rembg requires AI models to remove backgrounds. Models are cached locally (~/.rembg)"
 echo "and only need to be downloaded once."
 echo
 
 # Check if any models already exist
-MODEL_CACHE="$HOME/.u2net"
+MODEL_CACHE="$HOME/.rembg"
 if [ -d "$MODEL_CACHE" ] && [ "$(ls -A $MODEL_CACHE 2>/dev/null)" ]; then
     print_success "Found existing models in cache"
-    ls -la "$MODEL_CACHE"/*.onnx 2>/dev/null | awk '{print "  • " $9}' || true
+    find "$MODEL_CACHE" -name "*.onnx" 2>/dev/null | sed 's/^/  • /' || true
     echo
 fi
 
@@ -183,7 +182,7 @@ echo "   - example_usage.py: Code examples"
 echo
 echo "🔧 Configuration:"
 echo "   - Server script: $SCRIPT_DIR/start_server.sh"
-echo "   - Model cache: ~/.u2net"
+echo "   - Model cache: ~/.rembg"
 echo "   - Config file: $SCRIPT_DIR/claude_desktop_config.json"
 echo
 print_success "Setup complete! The Rembg MCP server is ready to use."

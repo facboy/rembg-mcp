@@ -33,7 +33,7 @@ def download_model(model_name):
 
 def get_downloaded_models():
     """Get list of already downloaded models"""
-    cache_dir = Path.home() / ".u2net"
+    cache_dir = Path.home() / ".rembg"
     downloaded = set()
 
     if cache_dir.exists():
@@ -55,7 +55,7 @@ def get_downloaded_models():
             "birefnet-massive.onnx": "birefnet-massive"
         }
 
-        for onnx_file in cache_dir.glob("*.onnx"):
+        for onnx_file in cache_dir.rglob("*.onnx"):
             model_name = filename_map.get(onnx_file.name)
             if model_name:
                 downloaded.add(model_name)
@@ -64,7 +64,7 @@ def get_downloaded_models():
 
 def delete_model(model_name):
     """Delete a downloaded model"""
-    cache_dir = Path.home() / ".u2net"
+    cache_dir = Path.home() / ".rembg"
 
     # Map model names to ONNX filenames
     filename_map = {
@@ -89,7 +89,7 @@ def delete_model(model_name):
         print(f"❌ Unknown model: {model_name}")
         return False
 
-    model_path = cache_dir / filename
+    model_path = cache_dir / "models" / model_name / filename
     if not model_path.exists():
         print(f"❌ Model not found: {model_name}")
         return False
@@ -326,11 +326,11 @@ def main():
         sys.exit(1)
 
     # Check model cache directory
-    cache_dir = Path.home() / ".u2net"
+    cache_dir = Path.home() / ".rembg"
     print(f"📁 Model cache directory: {cache_dir}")
 
     if cache_dir.exists():
-        existing_files = list(cache_dir.glob("*.onnx"))
+        existing_files = list(cache_dir.rglob("*.onnx"))
         if existing_files:
             print(f"📋 Found {len(existing_files)} existing model(s):")
             for file in existing_files:

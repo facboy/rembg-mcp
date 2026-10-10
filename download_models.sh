@@ -54,7 +54,6 @@ fi
 print_success "uv environment ready and rembg is available"
 
 # Set environment variables
-export REMBG_HOME="$HOME/.u2net"
 export OMP_NUM_THREADS=4
 
 # Run the Python download script with any arguments passed to this script

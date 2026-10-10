@@ -10,7 +10,6 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 # Set environment variables for rembg
-export REMBG_HOME="$HOME/.u2net"
 export OMP_NUM_THREADS=4
 
 # Start the MCP server

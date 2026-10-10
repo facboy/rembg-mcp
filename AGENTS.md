@@ -71,7 +71,7 @@ The library uses a session pattern for model management:
 
 When implementing MCP tools for rembg:
 
-1. **Model Management**: Handle model downloads (~100MB+ files) to `~/.u2net/`
+1. **Model Management**: Handle model downloads (~100MB+ files) to `~/.rembg/`
 2. **Session Reuse**: Create sessions once and reuse for multiple operations
 3. **Input Formats**: Support PIL Images, file paths, bytes, and URLs
 4. **Memory Management**: Large models require careful memory handling

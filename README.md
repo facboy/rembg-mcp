@@ -85,7 +85,6 @@ The `gpu` extra also pulls the CUDA libraries `onnxruntime-gpu` needs, through i
       "command": "/path/to/rembg-mcp/start_server.sh",
       "cwd": "/path/to/rembg-mcp",
       "env": {
-        "REMBG_HOME": "~/.u2net",
         "OMP_NUM_THREADS": "4"
       }
     }
@@ -127,7 +126,6 @@ Add to your Claude Code settings:
       "command": "/path/to/rembg-mcp/start_server.sh",
       "cwd": "/path/to/rembg-mcp",
       "env": {
-        "REMBG_HOME": "~/.u2net",
         "OMP_NUM_THREADS": "4"
       }
     }
@@ -271,13 +269,13 @@ uv run python download_models.py         # Interactive
 uv run python download_models.py u2net birefnet-portrait
 ```
 
-Models are cached in `~/.u2net/` and only need to be downloaded once.
+Models are cached in `~/.rembg/` (rembg's default; `$XDG_DATA_HOME/rembg` when set) and only need to be downloaded once.
 
 ## 🔧 Configuration
 
 ### Environment Variables
 
-- `REMBG_HOME`: Model storage directory (default: `~/.u2net`)
+- `REMBG_HOME`: Model storage directory (default: `~/.rembg`; `$XDG_DATA_HOME/rembg` when set)
 - `OMP_NUM_THREADS`: Number of CPU threads for processing (default: 4)
 - `MODEL_CHECKSUM_DISABLED`: Skip model checksum verification
 
@@ -333,7 +331,7 @@ uv run python --version  # Must be 3.10+
 **Model Download Problems**
 ```bash
 # Clear model cache and re-download
-rm -rf ~/.u2net
+rm -rf ~/.rembg
 
 # Re-download models manually
 ./download_models.sh              # Linux/macOS

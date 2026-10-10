@@ -72,7 +72,7 @@ def main():
     all_checks_passed &= check_mark(config_exists, "Claude Desktop config exists")
 
     # Check model cache directory
-    model_cache = Path.home() / ".u2net"
+    model_cache = Path.home() / ".rembg"
     cache_exists = model_cache.exists()
     all_checks_passed &= check_mark(cache_exists, "Model cache directory exists")
 

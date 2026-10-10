@@ -52,9 +52,9 @@ if errorlevel 1 (
 
 echo [SUCCESS] Installation test passed!
 
-REM Create model cache directory
+REM Create model cache directory (rembg's default location)
 echo [INFO] Creating model cache directory...
-if not exist "%USERPROFILE%\.u2net" mkdir "%USERPROFILE%\.u2net"
+if not exist "%USERPROFILE%\.rembg" mkdir "%USERPROFILE%\.rembg"
 
 REM Ask for GPU support
 echo.
@@ -73,7 +73,6 @@ echo @echo off > start_server.bat
 echo REM Start the Rembg MCP Server on Windows >> start_server.bat
 echo set "SCRIPT_DIR=%%~dp0" >> start_server.bat
 echo cd /d "%%SCRIPT_DIR%%" >> start_server.bat
-echo set REMBG_HOME=%%USERPROFILE%%\.u2net >> start_server.bat
 echo set OMP_NUM_THREADS=4 >> start_server.bat
 echo echo Starting Rembg MCP Server... >> start_server.bat
 echo uv run --no-sync python -m rembg_mcp.server >> start_server.bat
@@ -87,7 +86,6 @@ echo     "rembg": {
 echo       "command": "%SCRIPT_DIR%start_server.bat",
 echo       "cwd": "%SCRIPT_DIR%",
 echo       "env": {
-echo         "REMBG_HOME": "~/.u2net",
 echo         "OMP_NUM_THREADS": "4"
 echo       }
 echo     }
@@ -100,14 +98,14 @@ echo [SUCCESS] Created claude_desktop_config_windows.json
 REM Model download section
 echo.
 echo [INFO] 🤖 AI Model Setup
-echo Rembg requires AI models to remove backgrounds. Models are cached locally (%%USERPROFILE%%\.u2net^)
+echo Rembg requires AI models to remove backgrounds. Models are cached locally (%%USERPROFILE%%\.rembg^)
 echo and only need to be downloaded once.
 echo.
 
 REM Check if any models already exist
-if exist "%USERPROFILE%\.u2net\*.onnx" (
+if exist "%USERPROFILE%\.rembg" (
     echo [SUCCESS] Found existing models in cache
-    dir "%USERPROFILE%\.u2net\*.onnx" /b 2>nul
+    dir "%USERPROFILE%\.rembg\*.onnx" /s /b 2>nul
     echo.
 )
 

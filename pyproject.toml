@@ -34,7 +34,8 @@ gpu = ["rembg-mcp[gpu]"]
 
 [tool.uv]
 # setup.sh adds "gpu" here to opt into GPU support; a bare `uv sync` then preserves it.
-default-groups = ["dev", "gpu"]
+default-groups = ["dev"]
+
 [project.scripts]
 rembg-mcp = "rembg_mcp.server:main"
 
